@@ -1,0 +1,15 @@
+# npm
+node_modules
+npm-debug.log
+
+
+*.log
+*.swo
+*.swp
+*.gz
+
+# Linux
+.directory
+*~
+
+
