@@ -18,7 +18,6 @@ var TaskBox = React.createClass({
 });
 
 var Item = React.createClass({
-
   render : function () {
     var completed = this.props.completed ? 'completed' : '';
     return (
@@ -30,7 +29,7 @@ var Item = React.createClass({
             checked={this.props.completed}
             onChange={this.props.toggleComplete} 
           />
-          <label>{this.props.completed}</label>
+          <label>{this.props.taskName}</label>
           <button className="destroy" onClick={this.props.deleteTask} />
         </div>
       </li>  
@@ -40,7 +39,20 @@ var Item = React.createClass({
 
 var TodoApp = React.createClass({
   getInitialState : function() {
-    return {items : []};
+    return {
+        filter: 'all',
+        items : []
+    };
+  },
+  selectFilter : function(filter) {
+    this.state.filter = filter;
+    this.setState(this.state);
+  },
+  clearCompleted : function(){
+    this.state.items = this.state.items.filter(function(item){
+      return item.completed == false;
+    });
+    this.setState(this.state);
   },
   toggleComplete : function(item) {
     item.completed = !item.completed;
@@ -48,7 +60,7 @@ var TodoApp = React.createClass({
   },
   deleteTask : function(item){
     this.state.items = this.state.items.filter( function(task) {
-      return task != item;
+      return task !== item;
     });
     this.setState(this.state.items);
   },
@@ -64,9 +76,26 @@ var TodoApp = React.createClass({
     }
   },
   render : function () {
+    
+    switch(this.state.filter){
+      case 'all':
+        var showing = this.state.items;
+        break;
+      case 'active':
+        var showing = this.state.items.filter(function(task){
+          return !task.completed;
+        });
+        break;
+      case 'completed':
+        var showing = this.state.items.filter(function(task){
+          return task.completed;
+        });
+        break;
+    }
+
     return (
       <div>
-        <TaskBox 
+        <TaskBox
           handleNewTodoKeyDown={this.handleNewTodoKeyDown}
         />
         <section className="main">
@@ -75,32 +104,36 @@ var TodoApp = React.createClass({
             type="checkbox"
           />
           <ul className="todo-list">
-            {this.state.items.map(function(item) {
-              
+            {showing.map(function(item, i){ 
+              var toggleComplete = this.toggleComplete.bind(this,item);
+              var deleteTask = this.deleteTask.bind(this,item);
               return (<Item
                 completed={item.completed}
                 taskName={item.taskName}
-                toggleComplete={this.toggleComplete.bind(this,item)}
-                deleteTask={this.deleteTask.bind(this,item)}
+                toggleComplete={toggleComplete}
+                deleteTask={deleteTask}
+                key={i}
               />);
-              })
-            }
+              }, this)}
           </ul>
         </section>
         <footer className="footer">
           <span className="todo-count">
-            <strong>1</strong> 1 left
+            <strong>{this.state.items.filter(function(task){
+              return !task.completed;
+            }).length} / 
+            </strong> {this.state.items.length}
           </span>
           <ul className="filters">
             <li>
-              <a href="#" className="selected">All</a>
+              <a href="#" className={this.state.filter=='all'?'selected':''} onClick={this.selectFilter.bind(this,'all')}>All</a>
             </li>
-              <a href="#" className="">Active</a>
+              <a href="#" className={this.state.filter=='active'?'selected':''} onClick={this.selectFilter.bind(this, 'active')}>Active</a>
             <li>
-              <a href="#" className="">Completed</a>
+              <a href="#" className={this.state.filter=='completed'?'selected':''} onClick={this.selectFilter.bind(this, 'completed')}>Completed</a>
             </li>
           </ul>
-          <button className="clear-completed">Clear completed</button>
+          <button className="clear-completed" onClick={this.clearCompleted}>Clear completed</button>
         </footer>
       </div>  
     );
